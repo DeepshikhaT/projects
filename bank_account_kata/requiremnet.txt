@@ -1,0 +1,60 @@
+# Bank Account Kata
+
+## Setup
+
+1. Create a virtual environment:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate
+    ```
+
+2. Install dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. Run the application:
+    ```bash
+    flask run
+    ```
+
+4. Run tests:
+    ```bash
+    pytest
+    ```
+
+## API Endpoints
+
+- `POST /accounts`: Create a new account.
+- `GET /accounts/{account_id}`: View account details.
+- `DELETE /accounts/{account_id}`: Delete an account.
+- `POST /accounts/{account_id}/deposit`: Deposit money.
+- `POST /accounts/{account_id}/withdraw`: Withdraw money.
+- `GET /accounts/{account_id}/transactions`: View transaction history.
+
+## Example Requests
+
+- Create Account:
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -d '{"name": "John Doe"}' http://127.0.0.1:5000/accounts
+    ```
+
+- Deposit Money:
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -d '{"amount": 100.0}' http://127.0.0.1:5000/accounts/1/deposit
+    ```
+
+- Withdraw Money:
+    ```bash
+    curl -X POST -H "Content-Type: application/json" -d '{"amount": 50.0}' http://127.0.0.1:5000/accounts/1/withdraw
+    ```
+
+- View Transactions:
+    ```bash
+    curl -X GET http://127.0.0.1:5000/accounts/1/transactions
+    ```
+
+## Notes
+
+- Ensure the database is properly configured in `config.py`.
+- Use environment variables for sensitive information and configurations.

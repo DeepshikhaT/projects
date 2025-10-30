@@ -1,0 +1,218 @@
+.deployment-list {
+  padding: 1rem;
+}
+
+.deployment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.deployment-header h2 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+}
+
+.create-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.create-form input {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 250px;
+  transition: border-color 0.3s ease;
+}
+
+.create-form input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.create-form button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.create-form button:hover {
+  transform: translateY(-2px);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0;
+}
+
+.deployments {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.deployment-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.deployment-card:hover {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.deployment-info {
+  margin-bottom: 1rem;
+}
+
+.deployment-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.deployment-main h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.deployment-meta {
+  display: flex;
+  gap: 1.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.deployment-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-expand, .btn-delete {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-expand {
+  background: #4facfe;
+  color: white;
+}
+
+.btn-expand:hover {
+  background: #3d8fd1;
+}
+
+.btn-delete {
+  background: #fa709a;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #e55a84;
+}
+
+.deployment-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #f0f0f0;
+}
+
+.deployment-details h4 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.subdep-card {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.subdep-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.subdep-header h5 {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0;
+}
+
+.subdep-card p {
+  color: #666;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.mhosts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.mhost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.mhost-name {
+  color: #333;
+  font-weight: 500;
+}
+
+.empty-subdeps {
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}

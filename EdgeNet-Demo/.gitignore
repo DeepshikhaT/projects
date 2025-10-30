@@ -38,6 +38,3 @@ yarn-error.log*
 
 # Logs
 *.log
-
-# Interview preparation (private)
-INTERVIEW_GUIDE.md

@@ -1,0 +1,47 @@
+# Lab Network Inventory
+# This is a simulated network environment for testing
+
+[all:vars]
+ansible_connection=network_cli
+ansible_network_os=ios
+ansible_user=admin
+ansible_password=cisco
+ansible_become=yes
+ansible_become_method=enable
+ansible_become_password=cisco
+
+# Core Routers
+[core_routers]
+core-router-01 ansible_host=192.168.1.1
+core-router-02 ansible_host=192.168.1.2
+
+# Distribution Switches
+[distribution_switches]
+dist-sw-01 ansible_host=192.168.1.11
+dist-sw-02 ansible_host=192.168.1.12
+
+# Access Switches
+[access_switches]
+access-sw-01 ansible_host=192.168.1.21
+access-sw-02 ansible_host=192.168.1.22
+access-sw-03 ansible_host=192.168.1.23
+access-sw-04 ansible_host=192.168.1.24
+
+# Firewalls
+[firewalls]
+fw-01 ansible_host=192.168.1.254
+
+# Group all switches
+[switches:children]
+distribution_switches
+access_switches
+
+# Group all routers
+[routers:children]
+core_routers
+
+# All network devices
+[network:children]
+routers
+switches
+firewalls

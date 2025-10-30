@@ -1,0 +1,80 @@
+---
+# Playbook: Configure VLANs
+# Purpose: Creates and configures VLANs across switches
+# Usage: ansible-playbook playbooks/configure_vlans.yml -i inventory/lab/hosts
+
+- name: Configure VLANs on Switches
+  hosts: switches
+  gather_facts: no
+
+  vars_files:
+    - ../vars/vlans.yml
+
+  tasks:
+    - name: Display start message
+      debug:
+        msg: "Starting VLAN configuration on {{ inventory_hostname }}"
+
+    - name: Create VLANs
+      cisco.ios.ios_vlans:
+        config:
+          - vlan_id: "{{ item.id }}"
+            name: "{{ item.name }}"
+            state: active
+        state: merged
+      loop: "{{ vlans }}"
+      register: vlan_creation
+
+    - name: Configure access ports with VLAN assignments
+      cisco.ios.ios_l2_interfaces:
+        config:
+          - name: "{{ item.interface }}"
+            mode: access
+            access:
+              vlan: "{{ item.vlan_id }}"
+        state: merged
+      loop: "{{ vlan_assignments }}"
+      when: item.device == inventory_hostname
+      register: access_port_config
+
+    - name: Configure trunk ports
+      cisco.ios.ios_l2_interfaces:
+        config:
+          - name: "{{ item.interface }}"
+            mode: trunk
+            trunk:
+              allowed_vlans: "{{ item.allowed_vlans }}"
+              native_vlan: "{{ item.native_vlan }}"
+              encapsulation: dot1q
+        state: merged
+      loop: "{{ trunk_ports }}"
+      when: item.device == inventory_hostname
+      register: trunk_port_config
+
+    - name: Add interface descriptions
+      cisco.ios.ios_interfaces:
+        config:
+          - name: "{{ item.interface }}"
+            description: "{{ item.description }}"
+            enabled: true
+        state: merged
+      loop: "{{ vlan_assignments + trunk_ports }}"
+      when: item.device == inventory_hostname
+
+    - name: Verify VLAN configuration
+      cisco.ios.ios_command:
+        commands:
+          - show vlan brief
+      register: vlan_verification
+
+    - name: Display VLAN configuration
+      debug:
+        var: vlan_verification.stdout_lines
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: always
+
+    - name: Display completion message
+      debug:
+        msg: "VLAN configuration completed successfully on {{ inventory_hostname }}"

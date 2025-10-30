@@ -1,0 +1,33 @@
+# Python Requirements for NetOps-Automation
+# Network Automation Dependencies
+
+# Ansible
+ansible==2.15.0
+ansible-core==2.15.0
+
+# Ansible Collections (install via ansible-galaxy)
+# ansible-galaxy collection install cisco.ios
+# ansible-galaxy collection install cisco.nxos
+# ansible-galaxy collection install juniper.junos
+
+# Network Libraries
+netmiko==4.2.0
+paramiko==3.2.0
+napalm==4.0.0
+
+# Data Processing
+pyyaml==6.0
+jinja2==3.1.2
+textfsm==1.1.3
+
+# Monitoring and Reporting
+requests==2.31.0
+pandas==2.0.3
+
+# Testing
+pytest==7.4.0
+pytest-ansible==4.1.1
+
+# Utilities
+python-dotenv==1.0.0
+colorama==0.4.6

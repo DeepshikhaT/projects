@@ -1,0 +1,90 @@
+---
+# Playbook: Backup Network Device Configurations
+# Purpose: Creates backups of running configurations from all devices
+# Usage: ansible-playbook playbooks/backup_configs.yml -i inventory/lab/hosts
+
+- name: Backup Network Device Configurations
+  hosts: all
+  gather_facts: no
+
+  vars:
+    backup_dir: "../configs/backups"
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+
+  tasks:
+    - name: Create backup directory if it doesn't exist
+      delegate_to: localhost
+      file:
+        path: "{{ backup_dir }}/{{ timestamp }}"
+        state: directory
+        mode: '0755'
+      run_once: true
+
+    - name: Display backup message
+      debug:
+        msg: "Backing up configuration from {{ inventory_hostname }}"
+
+    - name: Backup running configuration
+      cisco.ios.ios_config:
+        backup: yes
+        backup_options:
+          filename: "{{ inventory_hostname }}_{{ timestamp }}.cfg"
+          dir_path: "{{ backup_dir }}/{{ timestamp }}"
+      register: backup_result
+
+    - name: Get running configuration
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: running_config
+
+    - name: Save configuration to file
+      delegate_to: localhost
+      copy:
+        content: "{{ running_config.stdout[0] }}"
+        dest: "{{ backup_dir }}/{{ timestamp }}/{{ inventory_hostname }}_running.cfg"
+
+    - name: Get startup configuration
+      cisco.ios.ios_command:
+        commands:
+          - show startup-config
+      register: startup_config
+      ignore_errors: yes
+
+    - name: Save startup configuration
+      delegate_to: localhost
+      copy:
+        content: "{{ startup_config.stdout[0] }}"
+        dest: "{{ backup_dir }}/{{ timestamp }}/{{ inventory_hostname }}_startup.cfg"
+      when: startup_config is succeeded
+
+    - name: Create backup manifest
+      delegate_to: localhost
+      lineinfile:
+        path: "{{ backup_dir}}/{{ timestamp }}/MANIFEST.txt"
+        line: "{{ inventory_hostname }} | {{ ansible_host }} | {{ ansible_date_time.iso8601 }} | SUCCESS"
+        create: yes
+
+    - name: Display completion message
+      debug:
+        msg: "Backup completed for {{ inventory_hostname }} in {{ backup_dir }}/{{ timestamp }}"
+
+- name: Generate backup summary report
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Count backed up devices
+      shell: "wc -l < {{ backup_dir }}/{{ timestamp }}/MANIFEST.txt"
+      register: device_count
+
+    - name: Display summary
+      debug:
+        msg:
+          - "================================================"
+          - "         BACKUP COMPLETED SUCCESSFULLY"
+          - "================================================"
+          - "Backup Location: {{ backup_dir }}/{{ timestamp }}"
+          - "Total Devices Backed Up: {{ device_count.stdout }}"
+          - "Timestamp: {{ timestamp }}"
+          - "================================================"

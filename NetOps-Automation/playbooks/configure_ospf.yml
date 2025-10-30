@@ -1,0 +1,75 @@
+---
+# Playbook: Configure OSPF Routing
+# Purpose: Configures OSPF routing protocol on routers
+# Usage: ansible-playbook playbooks/configure_ospf.yml -i inventory/lab/hosts
+
+- name: Configure OSPF on Routers
+  hosts: routers
+  gather_facts: no
+
+  vars_files:
+    - ../vars/routing.yml
+
+  tasks:
+    - name: Display start message
+      debug:
+        msg: "Configuring OSPF on {{ inventory_hostname }}"
+
+    - name: Configure OSPF router process
+      cisco.ios.ios_ospfv2:
+        config:
+          processes:
+            - process_id: 1
+              router_id: "{{ ospf_router_id }}"
+              max_metric:
+                router_lsa: false
+              passive_interface:
+                set_interface: true
+        state: merged
+      vars:
+        ospf_router_id: "{{ hostvars[inventory_hostname].ospf_router_id }}"
+
+    - name: Configure OSPF network statements
+      cisco.ios.ios_config:
+        lines:
+          - "network {{ item.network }} {{ item.wildcard }} area {{ item.area }}"
+        parents: "router ospf 1"
+      loop: "{{ hostvars[inventory_hostname].ospf_networks }}"
+
+    - name: Configure OSPF on interfaces
+      cisco.ios.ios_config:
+        lines:
+          - "ip ospf 1 area {{ item.area }}"
+          - "ip ospf network {{ item.network_type | default('point-to-point') }}"
+        parents: "interface {{ item.interface }}"
+      loop: "{{ hostvars[inventory_hostname].ospf_interfaces }}"
+
+    - name: Configure OSPF authentication (if enabled)
+      cisco.ios.ios_config:
+        lines:
+          - "ip ospf authentication message-digest"
+          - "ip ospf message-digest-key 1 md5 {{ ospf_auth_key }}"
+        parents: "interface {{ item.interface }}"
+      loop: "{{ hostvars[inventory_hostname].ospf_interfaces }}"
+      when: ospf_authentication_enabled | default(false)
+      no_log: true
+
+    - name: Verify OSPF configuration
+      cisco.ios.ios_command:
+        commands:
+          - show ip ospf neighbor
+          - show ip route ospf
+          - show ip ospf interface brief
+      register: ospf_verification
+
+    - name: Display OSPF neighbors
+      debug:
+        msg: "{{ ospf_verification.stdout_lines[0] }}"
+
+    - name: Save configuration
+      cisco.ios.ios_config:
+        save_when: always
+
+    - name: Display completion message
+      debug:
+        msg: "OSPF configuration completed on {{ inventory_hostname }}"

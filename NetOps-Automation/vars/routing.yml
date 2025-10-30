@@ -1,0 +1,71 @@
+# Routing Configuration Variables
+# OSPF and BGP configurations
+
+# OSPF Global Settings
+ospf_process_id: 1
+ospf_authentication_enabled: false
+ospf_auth_key: "SecureOSPFKey123"
+
+# Core Router 01 - OSPF Configuration
+core-router-01:
+  ospf_router_id: "1.1.1.1"
+  ospf_networks:
+    - network: "10.0.0.0"
+      wildcard: "0.0.255.255"
+      area: 0
+    - network: "192.168.1.0"
+      wildcard: "0.0.0.255"
+      area: 0
+  ospf_interfaces:
+    - interface: "GigabitEthernet0/0"
+      area: 0
+      network_type: "point-to-point"
+    - interface: "GigabitEthernet0/1"
+      area: 0
+      network_type: "broadcast"
+
+# Core Router 02 - OSPF Configuration
+core-router-02:
+  ospf_router_id: "2.2.2.2"
+  ospf_networks:
+    - network: "10.0.0.0"
+      wildcard: "0.0.255.255"
+      area: 0
+    - network: "192.168.2.0"
+      wildcard: "0.0.0.255"
+      area: 0
+  ospf_interfaces:
+    - interface: "GigabitEthernet0/0"
+      area: 0
+      network_type: "point-to-point"
+    - interface: "GigabitEthernet0/1"
+      area: 0
+      network_type: "broadcast"
+
+# BGP Configuration (for internet-facing routers)
+bgp_asn: 65001
+bgp_neighbors:
+  core-router-01:
+    - neighbor_ip: "203.0.113.1"
+      remote_as: 65000
+      description: "ISP Connection"
+    - neighbor_ip: "2.2.2.2"
+      remote_as: 65001
+      description: "iBGP to core-router-02"
+
+  core-router-02:
+    - neighbor_ip: "1.1.1.1"
+      remote_as: 65001
+      description: "iBGP to core-router-01"
+
+# Static Routes
+static_routes:
+  core-router-01:
+    - destination: "0.0.0.0/0"
+      next_hop: "203.0.113.1"
+      description: "Default route to Internet"
+
+  core-router-02:
+    - destination: "172.16.0.0/16"
+      next_hop: "192.168.2.254"
+      description: "Route to remote office"

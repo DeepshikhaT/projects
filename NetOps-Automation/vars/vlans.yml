@@ -1,0 +1,92 @@
+# VLAN Definitions
+# Define all VLANs used in the network
+
+vlans:
+  - id: 10
+    name: Management
+    description: Network Management VLAN
+
+  - id: 20
+    name: Data
+    description: User Data VLAN
+
+  - id: 30
+    name: Voice
+    description: VoIP VLAN
+
+  - id: 40
+    name: Guest
+    description: Guest WiFi VLAN
+
+  - id: 50
+    name: Servers
+    description: Server Farm VLAN
+
+  - id: 99
+    name: Native
+    description: Native VLAN for trunks
+
+# VLAN to Interface Assignments
+vlan_assignments:
+  # Access Switch 01
+  - device: access-sw-01
+    interface: GigabitEthernet0/1
+    vlan_id: 20
+    description: User Port - Floor 1
+
+  - device: access-sw-01
+    interface: GigabitEthernet0/2
+    vlan_id: 20
+    description: User Port - Floor 1
+
+  - device: access-sw-01
+    interface: GigabitEthernet0/10
+    vlan_id: 30
+    description: IP Phone
+
+  - device: access-sw-01
+    interface: GigabitEthernet0/20
+    vlan_id: 40
+    description: Guest WiFi AP
+
+  # Access Switch 02
+  - device: access-sw-02
+    interface: GigabitEthernet0/1
+    vlan_id: 20
+    description: User Port - Floor 2
+
+  - device: access-sw-02
+    interface: GigabitEthernet0/10
+    vlan_id: 30
+    description: IP Phone
+
+  - device: access-sw-02
+    interface: GigabitEthernet0/15
+    vlan_id: 50
+    description: Server Connection
+
+# Trunk Ports
+trunk_ports:
+  - device: access-sw-01
+    interface: GigabitEthernet0/24
+    description: Uplink to dist-sw-01
+    allowed_vlans: "10,20,30,40,50,99"
+    native_vlan: 99
+
+  - device: access-sw-02
+    interface: GigabitEthernet0/24
+    description: Uplink to dist-sw-02
+    allowed_vlans: "10,20,30,40,50,99"
+    native_vlan: 99
+
+  - device: dist-sw-01
+    interface: GigabitEthernet0/1
+    description: Downlink to access-sw-01
+    allowed_vlans: "10,20,30,40,50,99"
+    native_vlan: 99
+
+  - device: dist-sw-02
+    interface: GigabitEthernet0/1
+    description: Downlink to access-sw-02
+    allowed_vlans: "10,20,30,40,50,99"
+    native_vlan: 99

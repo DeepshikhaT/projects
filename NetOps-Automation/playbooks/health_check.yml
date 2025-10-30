@@ -1,0 +1,125 @@
+---
+# Playbook: Network Health Check
+# Purpose: Monitors health of all network devices
+# Usage: ansible-playbook playbooks/health_check.yml -i inventory/lab/hosts
+
+- name: Network Health Check
+  hosts: all
+  gather_facts: yes
+
+  vars:
+    report_dir: "../reports"
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+
+  tasks:
+    - name: Create reports directory
+      delegate_to: localhost
+      file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0755'
+      run_once: true
+
+    - name: Check device reachability
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        timeout: 10
+      delegate_to: localhost
+      register: reachability
+      ignore_errors: yes
+
+    - name: Get interface status
+      cisco.ios.ios_command:
+        commands:
+          - show ip interface brief
+      register: interface_status
+      when: reachability is succeeded
+
+    - name: Get CPU usage
+      cisco.ios.ios_command:
+        commands:
+          - show processes cpu | include CPU
+      register: cpu_usage
+      when: reachability is succeeded
+
+    - name: Get memory usage
+      cisco.ios.ios_command:
+        commands:
+          - show memory statistics | include Processor
+      register: memory_usage
+      when: reachability is succeeded
+
+    - name: Check routing protocol status (OSPF)
+      cisco.ios.ios_command:
+        commands:
+          - show ip ospf neighbor
+      register: ospf_neighbors
+      when:
+        - reachability is succeeded
+        - "'router' in group_names"
+      ignore_errors: yes
+
+    - name: Check VLAN status
+      cisco.ios.ios_command:
+        commands:
+          - show vlan brief
+      register: vlan_status
+      when:
+        - reachability is succeeded
+        - "'switch' in group_names"
+      ignore_errors: yes
+
+    - name: Check uptime
+      cisco.ios.ios_command:
+        commands:
+          - show version | include uptime
+      register: uptime
+      when: reachability is succeeded
+
+    - name: Check configuration status
+      cisco.ios.ios_command:
+        commands:
+          - show archive config differences
+      register: config_diff
+      when: reachability is succeeded
+      ignore_errors: yes
+
+    - name: Generate device health report
+      delegate_to: localhost
+      template:
+        src: ../templates/reports/health_report.j2
+        dest: "{{ report_dir }}/health_{{ inventory_hostname }}_{{ timestamp }}.txt"
+      vars:
+        device_name: "{{ inventory_hostname }}"
+        device_ip: "{{ ansible_host }}"
+        is_reachable: "{{ reachability is succeeded }}"
+        interfaces: "{{ interface_status.stdout[0] if interface_status is defined else 'N/A' }}"
+        cpu: "{{ cpu_usage.stdout[0] if cpu_usage is defined else 'N/A' }}"
+        memory: "{{ memory_usage.stdout[0] if memory_usage is defined else 'N/A' }}"
+        device_uptime: "{{ uptime.stdout[0] if uptime is defined else 'N/A' }}"
+
+- name: Generate Summary Report
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Create summary report header
+      copy:
+        content: |
+          ================================================
+          NETWORK HEALTH CHECK SUMMARY
+          ================================================
+          Timestamp: {{ timestamp }}
+
+        dest: "{{ report_dir }}/summary_{{ timestamp }}.txt"
+
+    - name: Add device status to summary
+      lineinfile:
+        path: "{{ report_dir }}/summary_{{ timestamp }}.txt"
+        line: "{{ item }} | {{ hostvars[item].ansible_host }} | {{ 'REACHABLE' if hostvars[item].reachability is succeeded else 'UNREACHABLE' }}"
+      loop: "{{ groups['all'] }}"
+
+    - name: Display summary location
+      debug:
+        msg: "Health check completed. Reports available in {{ report_dir }}/"

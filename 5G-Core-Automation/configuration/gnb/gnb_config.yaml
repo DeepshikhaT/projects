@@ -1,0 +1,275 @@
+# gNB (gNodeB) Configuration
+# ==========================
+# gNB is the 5G "cell tower" or "base station"
+#
+# Simple Explanation:
+# - Your phone talks to gNB via radio waves
+# - gNB connects your phone to the 5G core network
+# - Think of gNB as the "bridge" between your phone and internet
+
+gnb:
+  # Basic Identity
+  node_name: gNB-001           # Name of this base station
+  node_id: 0x000001            # Unique ID
+
+  # Network Identity (who owns this network)
+  plmn:
+    mcc: 001                   # Mobile Country Code (001 = test)
+    mnc: 01                    # Mobile Network Code (01 = test operator)
+
+  # TAC: Tracking Area Code (like a "zone" ID)
+  tac: 1                       # Tracking Area 1
+
+  # === INTERFACES ===
+
+  # N2 Interface: gNB ↔ AMF (Control Plane)
+  # This is how gNB talks to the core network for signaling
+  amf:
+    addr: 192.168.0.10         # AMF IP address
+    port: 38412                # NGAP port
+    bind_addr: 192.168.1.10    # gNB's own IP for N2
+
+  # N3 Interface: gNB ↔ UPF (User Plane)
+  # This is where actual user data flows
+  upf:
+    addr: 192.168.0.12         # UPF IP address
+    port: 2152                 # GTP-U port
+    bind_addr: 192.168.1.10    # gNB's own IP for N3
+
+  # === RADIO CONFIGURATION ===
+
+  # Cell configuration (each cell = coverage area)
+  cells:
+    - cell_id: 1               # Unique cell identifier
+      pci: 500                 # Physical Cell ID (used by phones to identify cell)
+
+      # Frequency configuration
+      dl_arfcn: 632628         # Downlink frequency (n78 band: 3.5 GHz)
+      ul_arfcn: 632628         # Uplink frequency
+
+      # Bandwidth
+      bandwidth: 100           # MHz (100 MHz = wide channel = fast speed)
+
+      # Power
+      tx_power: 40             # dBm (transmit power)
+
+      # SSB (Synchronization Signal Block)
+      ssb_arfcn: 632544        # Frequency for sync signals
+      ssb_period: 20           # Send sync signal every 20ms
+
+  # === CU-DU SPLIT CONFIGURATION ===
+  # Modern 5G splits gNB into two parts:
+  # - CU (Centralized Unit): "Brain" - handles protocols
+  # - DU (Distributed Unit): "Muscle" - handles radio
+
+  # CU Configuration
+  cu:
+    enabled: true
+    addr: 192.168.1.10         # CU IP address
+    f1_port: 2153              # F1 interface port (CU ↔ DU)
+
+    # CU can be further split:
+    cu_cp:                     # CU Control Plane (signaling)
+      addr: 192.168.1.10
+      port: 38472
+
+    cu_up:                     # CU User Plane (data)
+      addr: 192.168.1.11
+      port: 38473
+
+  # DU Configuration
+  du:
+    enabled: true
+    addr: 192.168.1.20         # DU IP address
+    f1_port: 2153              # F1 interface port
+
+    # Which CU does this DU connect to?
+    cu_addr: 192.168.1.10
+    cu_port: 2153
+
+  # === SLICE SUPPORT ===
+  # Network slicing = different "virtual networks" for different services
+  slices:
+    - sst: 1                   # SST 1 = eMBB (normal internet/video)
+      sd: 010203               # Slice differentiator
+
+    - sst: 2                   # SST 2 = URLLC (ultra-low latency for critical apps)
+      sd: 112233
+
+  # === QoS (Quality of Service) ===
+  # Priority rules for different types of traffic
+  qos:
+    # 5QI = 5G QoS Identifier (like priority levels)
+    - fiveqi: 1                # Highest priority (voice calls)
+      priority: 20
+      packet_delay: 100        # Max delay: 100ms
+      packet_error: 0.000001   # Very low error rate
+
+    - fiveqi: 9                # Default (web browsing)
+      priority: 80
+      packet_delay: 300        # Max delay: 300ms
+      packet_error: 0.000001
+
+# ============================================================================
+# HOW gNB WORKS - COMPLETE FLOW
+# ============================================================================
+#
+# Scenario: You turn on your 5G phone
+#
+# STEP 1: Phone Searches for Network
+# -----------------------------------
+# Your Phone
+#   │
+#   │ Scans radio frequencies
+#   │ Looks for "sync signals" (SSB)
+#   │
+#   ▼
+# gNB is broadcasting SSB every 20ms
+#   │
+#   │ Phone detects: PCI=500, frequency=3.5GHz
+#   │ Phone reads: MCC=001, MNC=01, TAC=1
+#   │
+#   ▼
+# Phone: "Found network 001-01!"
+#
+#
+# STEP 2: Initial Connection (RRC)
+# ---------------------------------
+# Phone sends: "I want to connect" (RRC Setup Request)
+#   │
+#   ▼
+# gNB-DU (Distributed Unit)
+#   │
+#   │ Handles radio layer (PHY/MAC)
+#   │ Receives radio signal from phone
+#   │
+#   ▼
+# gNB-CU (Centralized Unit)
+#   │
+#   │ Handles higher layers (RRC/PDCP)
+#   │ Decides: "Accept this phone"
+#   │
+#   ▼
+# gNB sends: "OK, you're connected" (RRC Setup Complete)
+#
+#
+# STEP 3: Registration (via AMF)
+# -------------------------------
+# Phone: "I want to register" (NAS: Registration Request)
+#   │
+#   │ Contains: IMSI (your phone number ID)
+#   │
+#   ▼
+# gNB receives registration request
+#   │
+#   │ gNB forwards to AMF via N2 interface
+#   │ (NGAP: Initial UE Message)
+#   │
+#   ▼
+# AMF (Core Network)
+#   │
+#   │ Checks: "Is this a valid subscriber?"
+#   │ Performs authentication
+#   │
+#   ▼
+# AMF sends back: "Registration accepted!"
+#   │
+#   ▼
+# gNB forwards to phone
+#   │
+#   ▼
+# Phone: "Yay! I'm registered to 5G network!"
+#
+#
+# STEP 4: Data Session (you open browser)
+# ----------------------------------------
+# Phone: "I want internet!" (PDU Session Establishment Request)
+#   │
+#   ▼
+# gNB → AMF → SMF
+#   │
+#   ▼
+# SMF: "OK, here's your IP: 10.45.1.100"
+# SMF tells UPF: "Route traffic for 10.45.1.100 via gNB"
+#   │
+#   ▼
+# gNB establishes "data bearer" (tunnel for your data)
+#   │
+#   │ N3 tunnel: gNB ↔ UPF (GTP-U)
+#   │
+#   ▼
+# Phone can now browse internet!
+#
+#
+# STEP 5: Data Transfer
+# ----------------------
+# You visit www.google.com:
+#
+# Phone → gNB (via radio)
+#   │
+#   │ gNB-DU: Receives radio signal
+#   │ gNB-CU: Processes packet
+#   │
+#   ▼
+# gNB → UPF (via N3/GTP-U)
+#   │
+#   ▼
+# UPF → Internet → Google
+#
+# Response comes back:
+#
+# Google → Internet → UPF
+#   │
+#   ▼
+# UPF → gNB (via GTP-U tunnel)
+#   │
+#   ▼
+# gNB → Phone (via radio)
+#   │
+#   ▼
+# You see Google homepage!
+#
+#
+# ============================================================================
+# WHY CU-DU SPLIT?
+# ============================================================================
+#
+# OLD WAY (Traditional gNB):
+# - Everything in one box at the cell site
+# - Expensive hardware at every tower
+# - Hard to upgrade
+#
+# NEW WAY (CU-DU Split):
+#
+# DU (at cell tower):
+#   - Handles time-critical radio functions
+#   - Smaller, cheaper hardware
+#   - Just does PHY/MAC layer
+#
+# CU (in data center/cloud):
+#   - Handles protocols (RRC, PDCP)
+#   - Can serve multiple DUs
+#   - Easy to upgrade (just software)
+#   - Can be virtualized in cloud
+#
+# Benefits:
+# 1. Cost: Fewer expensive boxes at towers
+# 2. Flexibility: CU can be anywhere (cloud, edge)
+# 3. Scale: One CU serves many DUs
+# 4. Maintenance: Update CU centrally, not at each tower
+#
+#
+# ============================================================================
+# REAL-WORLD EXAMPLE
+# ============================================================================
+#
+# T-Mobile 5G Network:
+# - Has thousands of cell towers (DUs)
+# - Has ~100 regional data centers (CUs)
+# - Each CU serves 50-100 cell towers
+# - If they need to update software, they update 100 CUs, not 10,000 towers!
+#
+# This saves:
+# - Time: Days instead of months
+# - Money: Millions of dollars
+# - Resources: Don't need techs at every tower

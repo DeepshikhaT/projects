@@ -1,0 +1,252 @@
+# Docker Compose for Quick 5G Network Demo
+# ==========================================
+# This file lets you start a complete 5G network with one command!
+#
+# Usage:
+#   docker-compose up -d    # Start everything
+#   docker-compose ps       # Check status
+#   docker-compose logs amf # View AMF logs
+#   docker-compose down     # Stop everything
+
+version: '3.8'
+
+services:
+  # MongoDB - Database for UDM (subscriber data)
+  mongodb:
+    image: mongo:latest
+    container_name: 5g-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - 5g-network
+    volumes:
+      - mongodb_data:/data/db
+
+  # AMF - Access and Mobility Management Function
+  amf:
+    image: open5gs/open5gs:latest
+    container_name: 5g-amf
+    environment:
+      COMPONENT_NAME: amf
+    volumes:
+      - ./configuration/5g-core/amf.yaml:/open5gs/config/amf.yaml
+    networks:
+      - 5g-network
+    ports:
+      - "38412:38412/sctp"  # N2 interface (gNB connection)
+      - "9091:9091"         # Metrics port
+    depends_on:
+      - mongodb
+
+  # SMF - Session Management Function
+  smf:
+    image: open5gs/open5gs:latest
+    container_name: 5g-smf
+    environment:
+      COMPONENT_NAME: smf
+    volumes:
+      - ./configuration/5g-core/smf.yaml:/open5gs/config/smf.yaml
+    networks:
+      - 5g-network
+    ports:
+      - "7777:7777"    # SBI interface
+      - "8805:8805/udp" # PFCP interface (to UPF)
+    depends_on:
+      - mongodb
+      - upf
+
+  # UPF - User Plane Function (data router)
+  upf:
+    image: open5gs/open5gs:latest
+    container_name: 5g-upf
+    environment:
+      COMPONENT_NAME: upf
+    volumes:
+      - ./configuration/5g-core/upf.yaml:/open5gs/config/upf.yaml
+    networks:
+      - 5g-network
+    ports:
+      - "2152:2152/udp"  # GTP-U interface (N3 - from gNB)
+      - "8805:8805/udp"  # PFCP interface (N4 - from SMF)
+      - "9090:9090"      # Metrics port
+    cap_add:
+      - NET_ADMIN        # Needed for creating tunnel interfaces
+    devices:
+      - /dev/net/tun
+    privileged: true
+
+  # UDM - Unified Data Management (subscriber database)
+  udm:
+    image: open5gs/open5gs:latest
+    container_name: 5g-udm
+    environment:
+      COMPONENT_NAME: udm
+    networks:
+      - 5g-network
+    ports:
+      - "7778:7778"  # SBI interface
+    depends_on:
+      - mongodb
+
+  # AUSF - Authentication Server Function
+  ausf:
+    image: open5gs/open5gs:latest
+    container_name: 5g-ausf
+    environment:
+      COMPONENT_NAME: ausf
+    networks:
+      - 5g-network
+    ports:
+      - "7779:7779"  # SBI interface
+    depends_on:
+      - udm
+
+  # NRF - Network Repository Function (service directory)
+  nrf:
+    image: open5gs/open5gs:latest
+    container_name: 5g-nrf
+    environment:
+      COMPONENT_NAME: nrf
+    networks:
+      - 5g-network
+    ports:
+      - "7780:7780"  # SBI interface
+
+  # PCF - Policy Control Function
+  pcf:
+    image: open5gs/open5gs:latest
+    container_name: 5g-pcf
+    environment:
+      COMPONENT_NAME: pcf
+    networks:
+      - 5g-network
+    ports:
+      - "7781:7781"  # SBI interface
+    depends_on:
+      - mongodb
+
+  # gNB - 5G Base Station (simulated)
+  # Note: In production, gNB is physical hardware or advanced simulator
+  # This is a simplified simulation for demo purposes
+  gnb:
+    image: ueransim/ueransim:latest
+    container_name: 5g-gnb
+    volumes:
+      - ./configuration/gnb/gnb_config.yaml:/config/gnb.yaml
+    networks:
+      - 5g-network
+    depends_on:
+      - amf
+      - upf
+    command: ./nr-gnb -c /config/gnb.yaml
+
+networks:
+  5g-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+
+volumes:
+  mongodb_data:
+
+
+# ============================================================================
+# HOW THIS WORKS
+# ============================================================================
+#
+# When you run "docker-compose up":
+#
+# 1. Creates network: 192.168.0.0/24 (all containers can talk to each other)
+#
+# 2. Starts MongoDB:
+#    - Stores subscriber data (UDM database)
+#    - Stores network configuration
+#
+# 3. Starts 5G Core components in order:
+#    a. NRF (service directory) - starts first
+#    b. UDM (needs MongoDB)
+#    c. AUSF (needs UDM)
+#    d. AMF (needs NRF, AUSF)
+#    e. SMF (needs NRF)
+#    f. UPF (independent)
+#    g. PCF (needs MongoDB)
+#
+# 4. Starts gNB (connects to AMF and UPF)
+#
+# 5. Ready! Now you can:
+#    - Connect UE (simulated phone)
+#    - Make calls
+#    - Use data
+#
+# ============================================================================
+# USEFUL COMMANDS
+# ============================================================================
+#
+# Start everything:
+# docker-compose up -d
+#
+# Check status:
+# docker-compose ps
+#
+# View all logs:
+# docker-compose logs -f
+#
+# View specific component logs:
+# docker-compose logs -f amf
+# docker-compose logs -f smf
+# docker-compose logs -f upf
+#
+# Stop everything:
+# docker-compose down
+#
+# Stop and remove all data:
+# docker-compose down -v
+#
+# Restart a component:
+# docker-compose restart amf
+#
+# Execute command inside container:
+# docker-compose exec amf bash
+#
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+#
+# If AMF won't start:
+# 1. Check logs: docker-compose logs amf
+# 2. Verify config: cat configuration/5g-core/amf.yaml
+# 3. Check network: docker network ls
+#
+# If gNB can't connect to AMF:
+# 1. Check AMF is running: docker-compose ps amf
+# 2. Check AMF logs: docker-compose logs amf | grep "NG Setup"
+# 3. Verify gNB config has correct AMF IP
+#
+# If UE can't get data:
+# 1. Check UPF: docker-compose logs upf
+# 2. Check SMF: docker-compose logs smf | grep "PDU"
+# 3. Verify UPF has internet access
+#
+# ============================================================================
+# ADDING SUBSCRIBERS
+# ============================================================================
+#
+# To add a test subscriber (phone):
+#
+# docker-compose exec mongodb mongo -u admin -p password
+# use open5gs
+# db.subscribers.insertOne({
+#   "imsi": "001010000000001",
+#   "msisdn": "15551234567",
+#   "security": {
+#     "k": "465B5CE8B199B49FAA5F0A2EE238A6BC",
+#     "opc": "E8ED289DEBA952E4283B54E88E6183CA",
+#     "amf": "8000",
+#     "sqn": NumberLong(0)
+#   },
+#   "subscribed_rau_tau_timer": 12,
+#   "network_access_mode": 0,
+#   "subscriber_status": 0
+# })

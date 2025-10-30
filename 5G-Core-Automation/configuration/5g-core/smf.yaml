@@ -1,0 +1,82 @@
+# SMF (Session Management Function) Configuration
+# ================================================
+# SMF is like the "session manager" - it handles your data connections
+#
+# Think of it like this:
+# - You want to browse internet on your phone
+# - SMF creates a "data session" (PDU Session) for you
+# - SMF assigns you an IP address
+# - SMF tells UPF where to send your data
+
+smf:
+  # Service Based Interface - how SMF talks to other 5G components
+  sbi:
+    - addr: 192.168.0.11       # SMF IP address
+      port: 7777               # Standard SBI port
+
+  # PFCP: Protocol for talking to UPF (User Plane Function)
+  # This is how SMF controls the UPF to route your data
+  pfcp:
+    - addr: 192.168.0.11
+      port: 8805               # Standard PFCP port
+
+  # GT-PU: Used for user data tunneling
+  gtpu:
+    - addr: 192.168.0.11
+      port: 2152               # Standard GTP-U port
+
+  # IP Pool: IP addresses to assign to mobile phones
+  # When your phone connects, SMF gives you one of these IPs
+  subnet:
+    - addr: 10.45.0.1/16       # Pool of IPs: 10.45.0.1 to 10.45.255.254
+      # This gives us ~65,000 IP addresses for phones
+
+  # DNS servers that phones will use
+  dns:
+    - 8.8.8.8                  # Google DNS primary
+    - 8.8.4.4                  # Google DNS secondary
+
+  # MTU: Maximum packet size
+  mtu: 1400                    # bytes (slightly less than standard 1500)
+
+  # DNN: Data Network Name (like "internet", "ims", "enterprise")
+  # Think of DNN as different "networks" or "services"
+  dnn:
+    - name: internet           # Name of the data network
+      dns:
+        ipv4: 8.8.8.8
+      mtu: 1400
+
+    - name: ims                # For voice calls (VoLTE/VoNR)
+      dns:
+        ipv4: 8.8.8.8
+      mtu: 1400
+
+  # NRF: Network Repository Function (service directory)
+  nrf:
+    - addr: 192.168.0.20
+      port: 7777
+
+  # UPF: User Plane Function (where data actually goes)
+  upf:
+    - addr: 192.168.0.12
+      port: 8805
+
+# How it works in real life:
+# ==========================
+#
+# Scenario: You open WhatsApp on your phone
+#
+# 1. Your phone says to AMF: "I want to use internet"
+# 2. AMF says to SMF: "This phone needs internet session"
+# 3. SMF does this:
+#    a. Picks an IP address from pool (e.g., 10.45.1.100)
+#    b. Creates a "session" (PDU Session)
+#    c. Tells UPF: "Route data for IP 10.45.1.100 to/from this phone"
+#    d. Tells phone: "Your IP is 10.45.1.100, DNS is 8.8.8.8"
+# 4. Now your phone can browse internet!
+#
+# SMF is like a hotel concierge:
+# - Assigns you resources (IP address = room number)
+# - Sets up services (DNS = room service)
+# - Coordinates with others (UPF = housekeeping) to serve you

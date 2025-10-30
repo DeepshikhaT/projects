@@ -1,0 +1,106 @@
+# UPF (User Plane Function) Configuration
+# ========================================
+# UPF is the "data highway" of 5G network
+#
+# Simple analogy: UPF is like the post office
+# - It receives packages (data packets) from phones
+# - Routes them to the internet
+# - Receives responses and sends back to phones
+
+upf:
+  # PFCP Interface: Control channel with SMF
+  # SMF tells UPF: "Hey, route traffic for this phone's IP"
+  pfcp:
+    - addr: 192.168.0.12       # UPF IP address
+      port: 8805               # Standard PFCP port
+
+  # GTP-U Interface: Actual data traffic
+  # This is where the real user data flows
+  gtpu:
+    - addr: 192.168.0.12
+      port: 2152               # Standard GTP-U port
+
+  # Subnet: IP addresses UPF will route
+  # These are the IPs assigned to phones by SMF
+  subnet:
+    - addr: 10.45.0.0/16       # IP range for mobile phones
+      dev: ogstun              # Virtual network interface
+
+  # DNN: Data Network Name configurations
+  # Different "exits" from the network
+  dnn:
+    - name: internet           # For regular internet traffic
+      subnet: 10.45.0.0/16
+      gateway: 10.45.0.1
+
+    - name: ims                # For voice calls (IMS = IP Multimedia Subsystem)
+      subnet: 10.46.0.0/16
+      gateway: 10.46.0.1
+
+  # Metrics for monitoring
+  metrics:
+    - addr: 0.0.0.0
+      port: 9090
+
+# How UPF Works - Step by Step:
+# ==============================
+#
+# Scenario: You browse www.google.com on your 5G phone
+#
+# STEP 1: Phone → gNB → UPF (Uplink - your request)
+# -------------------------------------------------
+# Your Phone (IP: 10.45.1.100)
+#   │
+#   │ "I want to visit google.com"
+#   │
+#   ▼
+# gNB (Cell Tower)
+#   │
+#   │ Wraps your request in GTP-U tunnel
+#   │ (GTP-U = special envelope/tunnel protocol)
+#   │
+#   ▼
+# UPF receives GTP packet
+#   │
+#   │ UPF opens the tunnel (removes GTP wrapper)
+#   │ Sees: Source=10.45.1.100, Destination=google.com
+#   │
+#   ▼
+# UPF routes packet to Internet
+#   │
+#   ▼
+# Internet → Google servers
+#
+# STEP 2: Internet → UPF → gNB → Phone (Downlink - Google's response)
+# --------------------------------------------------------------------
+# Google servers send response
+#   │
+#   ▼
+# UPF receives packet from internet
+#   │
+#   │ Destination: 10.45.1.100 (your phone's IP)
+#   │ UPF checks: "Which gNB serves this phone?"
+#   │ UPF wraps packet in GTP-U tunnel
+#   │
+#   ▼
+# gNB (Cell Tower)
+#   │
+#   │ Unwraps GTP tunnel
+#   │ Sends over radio to your phone
+#   │
+#   ▼
+# Your Phone receives Google's webpage!
+#
+#
+# Why UPF is Important:
+# =====================
+# 1. High Speed: Handles data at line rate (very fast)
+# 2. Scalability: Can handle millions of users
+# 3. Flexibility: Can be placed anywhere (edge, cloud, data center)
+# 4. QoS: Can prioritize traffic (video > web browsing > downloads)
+#
+# UPF is like a smart router:
+# - Knows which phone gets which data
+# - Can prioritize important traffic (video calls)
+# - Can be monitored for performance
+# - Can apply policies (block certain websites, etc.)

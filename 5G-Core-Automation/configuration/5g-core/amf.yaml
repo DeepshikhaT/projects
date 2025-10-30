@@ -1,0 +1,85 @@
+# AMF (Access and Mobility Management Function) Configuration
+# =============================================================
+# AMF is like the "gatekeeper" of the 5G network
+# It handles:
+# - Mobile phone registration (like checking in)
+# - Moving between cell towers (mobility)
+# - Security and authentication
+
+amf:
+  # Network interfaces
+  ngap:
+    # N2 interface: Connection between gNB (cell tower) and AMF
+    # This is where the cell tower talks to the core network
+    - addr: 192.168.0.10        # AMF IP address
+      port: 38412                # Standard NGAP port
+
+  # Metrics for monitoring (like health dashboard)
+  metrics:
+    - addr: 0.0.0.0              # Listen on all interfaces
+      port: 9091                 # Prometheus metrics port
+
+  # GUAMI: Globally Unique AMF Identifier
+  # Think of this as AMF's unique ID card
+  guami:
+    plmn_id:
+      mcc: 001                   # Mobile Country Code (001 = test network)
+      mnc: 01                    # Mobile Network Code (01 = test operator)
+    amf_id:
+      region: 2                  # AMF region
+      set: 1                     # AMF set
+      pointer: 0                 # AMF pointer
+
+  # TAI: Tracking Area Identity
+  # Like a "zone" or "area" in the network
+  # Mobile phones register to a tracking area
+  tai:
+    - plmn_id:
+        mcc: 001
+        mnc: 01
+      tac: 1                     # Tracking Area Code
+
+  # Supported PLMNs (networks) and slices
+  plmn_support:
+    - plmn_id:
+        mcc: 001
+        mnc: 01
+      s_nssai:
+        # Network slices (different types of service)
+        - sst: 1                 # SST 1 = eMBB (Enhanced Mobile Broadband - normal internet)
+          sd: 010203             # Slice Differentiator (optional)
+        - sst: 2                 # SST 2 = URLLC (Ultra-Reliable Low Latency - for critical apps)
+          sd: 112233
+
+  # Security settings
+  security:
+    integrity_order: [NIA2, NIA1, NIA0]     # Encryption algorithms (strongest first)
+    ciphering_order: [NEA2, NEA1, NEA0]     # Integrity algorithms
+
+  # Network Function (NF) connections
+  # These are other 5G components AMF talks to
+  sbi:
+    # Service Based Interface - how 5G components communicate
+    - addr: 192.168.0.10
+      port: 7777
+
+  # NRF: Network Repository Function (like a phone book of services)
+  nrf:
+    - addr: 192.168.0.20
+      port: 7777
+
+# Simple Explanation:
+# ==================
+# AMF is the first point of contact when your phone connects to 5G
+#
+# When you turn on your phone:
+# 1. Phone → Cell Tower (gNB) → AMF (via N2/NGAP interface)
+# 2. AMF checks: "Who are you?" (authentication)
+# 3. AMF checks: "Where are you?" (tracking area)
+# 4. AMF says: "OK, you're registered!"
+# 5. Now you can make calls and use data
+#
+# Think of AMF as the reception desk at a hotel:
+# - Checks your ID (authentication)
+# - Gives you a room (assigns you to tracking area)
+# - Remembers where you are (mobility management)

@@ -1,0 +1,162 @@
+# Python Requirements for 5G-Core-Automation
+# 5G Network Function Virtualization & Orchestration
+
+# ==============================================================================
+# INFRASTRUCTURE & ORCHESTRATION
+# ==============================================================================
+
+# Terraform (Infrastructure as Code)
+# Install: https://www.terraform.io/downloads.html
+
+# Ansible for configuration management
+ansible==2.15.0
+ansible-core==2.15.0
+
+# Kubernetes Python client
+kubernetes==27.2.0
+
+# Docker SDK for Python
+docker==6.1.3
+
+# ==============================================================================
+# 5G CORE & RAN LIBRARIES
+# ==============================================================================
+
+# Note: Open5GS and Free5GC are deployed as containers/binaries
+# Python libraries for interacting with 5G components
+
+# SCTP support (5G signaling protocol)
+pysctp==0.6.1
+
+# Network protocol handling
+scapy==2.5.0
+
+# GTP (GPRS Tunneling Protocol) handling
+# Custom GTP libraries or use scapy
+
+# ==============================================================================
+# TESTING & SIMULATION
+# ==============================================================================
+
+# Test framework
+pytest==7.4.0
+pytest-asyncio==0.21.1
+
+# HTTP client for API testing
+requests==2.31.0
+
+# Network simulation
+#mininet (install separately if needed)
+
+# ==============================================================================
+# MONITORING & ANALYTICS
+# ==============================================================================
+
+# Kafka for telemetry streaming
+kafka-python==2.0.2
+
+# Prometheus client
+prometheus-client==0.17.1
+
+# Time-series data handling
+pandas==2.0.3
+
+# Data visualization
+matplotlib==3.7.2
+
+# ==============================================================================
+# PACKET ANALYSIS
+# ==============================================================================
+
+# PyShark (Wireshark wrapper)
+pyshark==0.6
+
+# PCAP file handling
+dpkt==1.9.8
+
+# ==============================================================================
+# DATABASE & STORAGE
+# ==============================================================================
+
+# MongoDB for subscriber database (UDM)
+pymongo==4.5.0
+
+# Redis for caching
+redis==5.0.0
+
+# SQL database
+sqlalchemy==2.0.20
+
+# ==============================================================================
+# NETWORKING & PROTOCOLS
+# ==============================================================================
+
+# Network interface manipulation
+pyroute2==0.7.9
+
+# SSH client
+paramiko==3.3.1
+
+# ==============================================================================
+# UTILITIES
+# ==============================================================================
+
+# YAML configuration files
+pyyaml==6.0.1
+
+# JSON schema validation
+jsonschema==4.19.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Logging
+colorlog==6.7.0
+
+# CLI interface
+click==8.1.7
+
+# Progress bars
+tqdm==4.66.1
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# ==============================================================================
+# CLOUD PROVIDER SDKs
+# ==============================================================================
+
+# AWS SDK
+boto3==1.28.57
+
+# Azure SDK
+azure-mgmt-compute==30.2.0
+azure-mgmt-network==24.0.0
+
+# ==============================================================================
+# API & WEB
+# ==============================================================================
+
+# Flask for web APIs (optional monitoring API)
+flask==2.3.3
+flask-cors==4.0.0
+
+# FastAPI (alternative, async)
+# fastapi==0.103.1
+# uvicorn==0.23.2
+
+# ==============================================================================
+# DEVELOPMENT & DEBUGGING
+# ==============================================================================
+
+# IPython for interactive debugging
+ipython==8.15.0
+
+# Code formatting
+black==23.9.1
+
+# Linting
+pylint==2.17.5
+
+# Type checking
+mypy==1.5.1

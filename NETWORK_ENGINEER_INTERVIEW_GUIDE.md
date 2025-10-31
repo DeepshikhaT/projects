@@ -1,4 +1,4 @@
-# Network Engineer Interview Guide (3+ Years Experience)
+# Network Engineer Interview Guide (10+ Years Experience - Senior/Staff Level)
 
 ## 📚 Table of Contents
 1. [Core Knowledge Expected](#core-knowledge-expected)
@@ -13,7 +13,15 @@
 
 ## Core Knowledge Expected
 
-### For 3 Years Experience, You Should Know:
+### For 10+ Years Experience (Senior/Staff Level), You Should Know:
+
+**Advanced Expertise Expected:**
+- Deep understanding of all protocols
+- Design large-scale networks from scratch
+- Lead architecture decisions
+- Mentor junior engineers
+- Troubleshoot complex multi-vendor environments
+- Strong automation and scripting abilities
 
 **Networking Fundamentals:**
 - OSI Model (all 7 layers) - explain any layer on demand
@@ -1701,12 +1709,53 @@ Before your interview, make sure you can:
 
 **You have strong experience - OWN IT!**
 
-Your combination of:
-- Nokia (telecom/5G) + Meta (big tech/scale)
-- Networking fundamentals + Automation
-- 3.5 years total experience
+**Your ACTUAL Experience Profile:**
+- **12 years total IT experience**
+- **Telecom Background (11+ years):**
+  - Nokia: 3 years (5G automation engineer)
+  - Mitel, Newnet, Aricent: ~9 years combined (telecom engineer)
+  - **Expert in:** 5G, IMS (SIP), 3G, SS7, Deployment automation
+- **Current:** Meta - 9 months (Edge Network Services deployment engineer)
 
-...is EXACTLY what modern network engineering roles want.
+**This makes you HIGHLY QUALIFIED for Senior/Staff roles because:**
+
+1. **Deep Telecom Expertise (11+ years):**
+   - Multiple telecom vendors (Nokia, Mitel, Newnet, Aricent)
+   - Full protocol stack: 5G, IMS, SIP, 3G, SS7
+   - Both legacy (3G, SS7) and modern (5G) technologies
+   - Real carrier-grade experience
+
+2. **5G Specialist:**
+   - 5G core network automation
+   - RAN (Radio Access Network)
+   - End-to-end 5G deployment
+
+3. **IMS & VoIP Expert:**
+   - IMS (IP Multimedia Subsystem)
+   - SIP (Session Initiation Protocol)
+   - Voice over LTE (VoLTE) / Voice over 5G (VoNR)
+
+4. **Legacy Protocols:**
+   - SS7 (Signaling System 7)
+   - 3G networks (UMTS, HSPA)
+   - Shows breadth and depth
+
+5. **Modern Cloud/Automation:**
+   - Meta experience (current role)
+   - Python, Hack, React
+   - DNS, network deployment automation
+   - Bridging traditional telecom with modern DevOps
+
+6. **Automation & Deployment:**
+   - Network automation across all roles
+   - Deployment engineering
+   - Infrastructure as Code mindset
+
+**Your Unique Value Proposition:**
+
+"I'm a senior network engineer with 12 years of telecom experience across multiple carriers (Nokia, Mitel, Newnet, Aricent) covering the full technology evolution from 3G/SS7 to 5G. I've worked on IMS/SIP for voice services, 5G core automation, and now at Meta, I'm applying this deep telecom knowledge to modern cloud-scale infrastructure. I bridge the gap between traditional carrier networks and modern cloud-native approaches."
+
+**You're NOT a junior 3-year engineer - you're a SENIOR 12-year veteran!**
 
 **Common Interview Mistakes to Avoid:**
 ❌ Being too modest ("I just did basic stuff")

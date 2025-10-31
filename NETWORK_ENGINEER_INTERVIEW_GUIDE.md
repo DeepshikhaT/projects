@@ -1036,16 +1036,401 @@ Recent topics I've studied:
 **Key Knowledge Areas:**
 
 1. **DNS Fundamentals (MUST KNOW):**
+
+### DNS Record Types - Complete Explanation
+
+**A Record (Address Record)**
 ```
-DNS Record Types:
-- A: IPv4 address (example.com → 192.0.2.1)
-- AAAA: IPv6 address
-- CNAME: Alias (www.example.com → example.com)
-- MX: Mail server (mail.example.com)
-- TXT: Text records (SPF, DKIM, verification)
-- NS: Name server
-- SOA: Start of Authority
-- PTR: Reverse DNS (IP → hostname)
+Purpose: Maps domain name to IPv4 address
+Example:
+  example.com.    3600    IN    A    192.0.2.1
+  www.example.com. 3600    IN    A    192.0.2.1
+
+Breakdown:
+- example.com. = Domain name (dot at end is important!)
+- 3600 = TTL (Time To Live) in seconds (1 hour)
+- IN = Internet class
+- A = Record type
+- 192.0.2.1 = IPv4 address
+
+Use Case: Basic website hosting
+When user types www.example.com, browser gets 192.0.2.1
+
+Multiple A Records (Round Robin Load Balancing):
+  example.com.    IN    A    192.0.2.1
+  example.com.    IN    A    192.0.2.2
+  example.com.    IN    A    192.0.2.3
+```
+
+**AAAA Record (IPv6 Address)**
+```
+Purpose: Maps domain name to IPv6 address
+Example:
+  example.com.    IN    AAAA    2001:0db8::1
+
+IPv6 Address Format:
+- 8 groups of 4 hexadecimal digits
+- :: = compress consecutive zeros
+- 2001:0db8:0000:0000:0000:0000:0000:0001
+- Shortened: 2001:0db8::1
+
+Use Case: IPv6-enabled websites
+Future-proofing as world transitions to IPv6
+
+Why AAAA?
+- A = IPv4 (32 bits = 4 bytes)
+- AAAA = IPv6 (128 bits = 4 × 4 bytes)
+```
+
+**CNAME Record (Canonical Name)**
+```
+Purpose: Alias - points one domain to another
+Example:
+  www.example.com.    IN    CNAME    example.com.
+  ftp.example.com.    IN    CNAME    example.com.
+  mail.example.com.   IN    CNAME    example.com.
+
+How it works:
+1. User queries www.example.com
+2. DNS returns CNAME → example.com
+3. DNS then queries example.com for A record
+4. Returns final IP address
+
+IMPORTANT RULES:
+✗ Cannot use CNAME at zone apex (example.com cannot be CNAME)
+✗ Cannot mix CNAME with other records at same name
+✓ Can chain CNAMEs (but slow, not recommended)
+
+Real-World Example:
+  www.example.com.    IN    CNAME    example.com.
+  example.com.        IN    A         192.0.2.1
+
+Why use CNAME?
+- Central management: Update one A record, all CNAMEs follow
+- CDN: Point to CDN hostname
+  www.example.com. IN CNAME www.example.cloudfront.net.
+```
+
+**MX Record (Mail Exchange)**
+```
+Purpose: Specifies mail servers for domain
+Example:
+  example.com.    IN    MX    10    mail1.example.com.
+  example.com.    IN    MX    20    mail2.example.com.
+
+Format:
+  domain    IN    MX    priority    mail-server
+
+Priority: Lower number = higher priority
+- 10 = Primary mail server (try first)
+- 20 = Backup mail server (try if 10 fails)
+
+Complete Mail Setup:
+  example.com.        IN    MX    10    mail.example.com.
+  mail.example.com.   IN    A          192.0.2.10
+
+How Email Works:
+1. Send email to user@example.com
+2. Sender's mail server queries MX for example.com
+3. Gets: mail.example.com (priority 10)
+4. Queries A record for mail.example.com
+5. Gets: 192.0.2.10
+6. Connects to 192.0.2.10 and delivers email
+
+Multiple MX (Redundancy):
+  example.com.    IN    MX    10    mail1.example.com.
+  example.com.    IN    MX    20    mail2.example.com.
+  example.com.    IN    MX    30    mail3.example.com.
+```
+
+**TXT Record (Text Record)**
+```
+Purpose: Store arbitrary text data
+Common Uses:
+
+1. SPF (Sender Policy Framework) - Email Authentication:
+  example.com.    IN    TXT    "v=spf1 ip4:192.0.2.0/24 include:_spf.google.com ~all"
+  
+  Meaning:
+  - v=spf1: SPF version 1
+  - ip4:192.0.2.0/24: Allowed to send from this IP range
+  - include:_spf.google.com: Also allow Google's servers
+  - ~all: Soft fail for others
+
+2. DKIM (DomainKeys Identified Mail) - Email Signing:
+  default._domainkey.example.com.    IN    TXT    "v=DKIM1; k=rsa; p=MIGfMA0G..."
+  
+  Contains public key for email signature verification
+
+3. DMARC (Domain-based Message Authentication):
+  _dmarc.example.com.    IN    TXT    "v=DMARC1; p=reject; rua=mailto:dmarc@example.com"
+  
+  Tells receivers what to do with failed SPF/DKIM
+
+4. Domain Verification (Google, Microsoft):
+  example.com.    IN    TXT    "google-site-verification=abc123def456"
+  
+  Proves you own the domain
+
+5. Site Information:
+  example.com.    IN    TXT    "v=verifyme; owner=Company Inc"
+
+Length Limit: 255 characters per string (can have multiple strings)
+```
+
+**NS Record (Name Server)**
+```
+Purpose: Delegates DNS zone to name servers
+Example:
+  example.com.    IN    NS    ns1.example.com.
+  example.com.    IN    NS    ns2.example.com.
+
+What it means:
+"For example.com, ask these name servers for information"
+
+Delegation Example:
+Parent zone (com.):
+  example.com.    IN    NS    ns1.example.com.
+  example.com.    IN    NS    ns2.example.com.
+  ns1.example.com. IN    A     192.0.2.1
+  ns2.example.com. IN    A     192.0.2.2
+
+Subdomain Delegation:
+  subdomain.example.com.    IN    NS    ns1.subdomain.example.com.
+  subdomain.example.com.    IN    NS    ns2.subdomain.example.com.
+
+Cloudflare Example:
+  example.com.    IN    NS    abe.ns.cloudflare.com.
+  example.com.    IN    NS    bea.ns.cloudflare.com.
+
+Why Multiple NS Records?
+- Redundancy: If one name server down, others work
+- Load balancing: Distribute queries
+- Best practice: 2-4 name servers
+```
+
+**SOA Record (Start of Authority)**
+```
+Purpose: Contains zone information and settings
+Example:
+  example.com.    IN    SOA    ns1.example.com. admin.example.com. (
+                                2023103101    ; Serial (YYYYMMDDnn)
+                                3600          ; Refresh (1 hour)
+                                1800          ; Retry (30 minutes)
+                                604800        ; Expire (1 week)
+                                86400 )       ; Minimum TTL (1 day)
+
+Fields Explained:
+
+1. Primary Name Server: ns1.example.com.
+   - Authoritative server for this zone
+
+2. Email: admin.example.com.
+   - Contact email (replace @ with .)
+   - admin@example.com → admin.example.com.
+
+3. Serial: 2023103101
+   - Version number (increment on every change)
+   - Format: YYYYMMDDnn (date + sequence)
+   - Secondary servers use this to detect updates
+
+4. Refresh: 3600 seconds
+   - How often secondary checks for updates
+   
+5. Retry: 1800 seconds
+   - If refresh fails, retry after this time
+   
+6. Expire: 604800 seconds (1 week)
+   - If secondary can't contact primary for this long,
+     stop serving the zone
+   
+7. Minimum TTL: 86400 seconds (1 day)
+   - Negative caching (cache NXDOMAIN responses)
+
+Why SOA Matters:
+- Required for every DNS zone
+- Controls zone transfer behavior
+- Affects DNS propagation timing
+```
+
+**PTR Record (Pointer - Reverse DNS)**
+```
+Purpose: Maps IP address to hostname (reverse of A record)
+Example:
+  1.2.0.192.in-addr.arpa.    IN    PTR    mail.example.com.
+
+How it works:
+IP: 192.0.2.1
+Reversed: 1.2.0.192
+Add suffix: 1.2.0.192.in-addr.arpa.
+
+IPv6 PTR:
+  1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
+
+Use Cases:
+
+1. Email Servers (CRITICAL):
+   Many mail servers reject email from IPs without PTR
+   PTR must match hostname in HELO/EHLO command
+   
+   Forward: mail.example.com → 192.0.2.10
+   Reverse: 192.0.2.10 → mail.example.com
+   ✓ Match = Good
+   ✗ No match = Email might be rejected
+
+2. Logging/Troubleshooting:
+   Logs show hostnames instead of just IPs
+
+3. Security:
+   Some services verify PTR for authenticity
+
+Setting up PTR:
+- You DON'T control PTR for your IPs
+- Your ISP or hosting provider controls it
+- Request them to set PTR for you
+
+Verification:
+  dig -x 192.0.2.1
+  nslookup 192.0.2.1
+```
+
+**SRV Record (Service Record)**
+```
+Purpose: Specifies location of services
+Example:
+  _http._tcp.example.com.    IN    SRV    10 60 80 web.example.com.
+
+Format:
+  _service._proto.name    IN    SRV    priority weight port target
+
+Fields:
+- _service: Service name (e.g., _http, _sip, _ldap)
+- _proto: Protocol (e.g., _tcp, _udp)
+- priority: Like MX priority (lower = preferred)
+- weight: Load balancing (higher = more traffic)
+- port: Service port number
+- target: Hostname providing the service
+
+Real Examples:
+
+1. Microsoft Active Directory:
+  _ldap._tcp.dc._msdcs.example.com.    IN    SRV    0 100 389 dc1.example.com.
+
+2. SIP (VoIP):
+  _sip._tcp.example.com.    IN    SRV    10 60 5060 sip1.example.com.
+  _sip._tcp.example.com.    IN    SRV    10 40 5060 sip2.example.com.
+
+3. XMPP (Jabber):
+  _xmpp-client._tcp.example.com.    IN    SRV    5 0 5222 xmpp.example.com.
+
+Why SRV Records?
+- Service discovery without hardcoding ports
+- Load balancing across multiple servers
+- Failover capabilities
+- Used heavily in VoIP, instant messaging, Active Directory
+```
+
+**NAPTR Record (Naming Authority Pointer)**
+```
+Purpose: Advanced DNS rewriting and service selection
+Used mainly in telecom (VoIP, ENUM)
+
+Example:
+  example.com.    IN    NAPTR    100 10 "U" "E2U+sip" "!^.*$!sip:info@example.com!" .
+
+Format:
+  name    IN    NAPTR    order preference flags service regexp replacement
+
+Fields:
+- order: Processing order (lower first)
+- preference: If order same, use preference
+- flags: Processing flags
+  - U = Terminal (result is URI)
+  - S = Look up SRV record next
+  - A = Look up A/AAAA record next
+- service: Service type (e.g., E2U+sip for SIP)
+- regexp: Regular expression to transform input
+- replacement: Replacement pattern or domain
+
+ENUM Example (Phone Number to SIP):
+Input: +1-555-123-4567
+ENUM domain: 7.6.5.4.3.2.1.5.5.5.1.e164.arpa
+
+  7.6.5.4.3.2.1.5.5.5.1.e164.arpa.    IN    NAPTR    100 10 "u" "E2U+sip" "!^.*$!sip:15551234567@example.com!" .
+
+Result: sip:15551234567@example.com
+
+Real-World Use:
+- Telecom: Convert phone numbers to SIP addresses
+- VoIP: Route calls based on phone number
+- ENUM: E.164 Number Mapping
+
+Why Most People Don't Use NAPTR:
+- Complex to configure
+- Mainly used in telecom industry
+- Requires understanding of regular expressions
+- Most websites use simpler A/CNAME records
+```
+
+**CAA Record (Certification Authority Authorization)**
+```
+Purpose: Specify which CAs can issue SSL certificates
+Example:
+  example.com.    IN    CAA    0 issue "letsencrypt.org"
+  example.com.    IN    CAA    0 issuewild "letsencrypt.org"
+  example.com.    IN    CAA    0 iodef "mailto:security@example.com"
+
+Format:
+  name    IN    CAA    flags tag value
+
+Flags:
+- 0 = Non-critical (default)
+- 128 = Critical (must understand to proceed)
+
+Tags:
+- issue: Which CA can issue certificates
+- issuewild: Which CA can issue wildcard certificates
+- iodef: Email/URL to report violations
+
+Why CAA?
+- Security: Prevent unauthorized certificate issuance
+- Required by: Certificate Authorities (per CA/Browser Forum)
+
+Example Configuration:
+  example.com.    IN    CAA    0 issue "letsencrypt.org"
+  example.com.    IN    CAA    0 issue "digicert.com"
+  example.com.    IN    CAA    0 iodef "mailto:security@example.com"
+
+Means:
+- Only Let's Encrypt and DigiCert can issue certs
+- Notify security@example.com of violations
+```
+
+### DNS Query Types and Behavior
+
+**Recursive Query:**
+```
+Client → Recursive Resolver: "What's www.example.com?"
+Resolver does all the work:
+1. Queries root servers
+2. Queries TLD servers
+3. Queries authoritative servers
+4. Returns final answer to client
+
+Client just waits for answer.
+```
+
+**Iterative Query:**
+```
+Client → Server: "What's www.example.com?"
+Server: "I don't know, ask .com servers at X.X.X.X"
+Client → .com servers: "What's www.example.com?"
+.com: "I don't know, ask example.com servers at Y.Y.Y.Y"
+Client → example.com servers: "What's www.example.com?"
+example.com: "It's 192.0.2.1"
+
+Client does the work, following referrals.
+```
 
 DNS Query Process:
 1. User types www.example.com

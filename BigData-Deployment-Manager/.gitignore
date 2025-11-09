@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Spark
+metastore_db/
+derby.log
+spark-warehouse/
+*.log
+
+# Hive
+hive-exec.jar
+*.hiverc
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# Docker
+.dockerignore
+
+# Data files (exclude large data files)
+*.csv
+*.parquet
+*.orc
+data/
+*.gz
+*.zip
+
+# Credentials (important!)
+credentials.json
+secrets.yaml
+*_credentials.yaml

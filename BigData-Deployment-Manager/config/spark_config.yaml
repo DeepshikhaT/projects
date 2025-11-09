@@ -1,0 +1,31 @@
+# Spark Configuration for Deployment Manager
+
+spark:
+  # Spark master URL
+  # local[*] - use all available cores locally
+  # local[4] - use 4 cores locally
+  # spark://host:port - connect to Spark cluster
+  master: "local[4]"
+
+  # Application name
+  app_name: "DeploymentManagerETL"
+
+  # Executor configuration
+  executor_memory: "4g"
+  executor_cores: 4
+  driver_memory: "2g"
+
+  # Dynamic allocation
+  dynamic_allocation: true
+
+  # SQL/Hive configuration
+  sql:
+    warehouse_dir: "/user/hive/warehouse"
+    adaptive_enabled: true
+
+  # Shuffle configuration
+  shuffle:
+    partitions: 200
+
+  # Logging
+  log_level: "WARN"

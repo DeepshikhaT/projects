@@ -1,0 +1,32 @@
+# Database Configuration for Deployment Manager
+
+# Source Database Configuration (where raw data is stored)
+source_db:
+  # PostgreSQL configuration for NetOps data
+  host: "localhost"
+  port: 5432
+  database: "netops_db"
+  user: "postgres"
+  password: "your_password_here"
+  driver: "org.postgresql.Driver"
+
+# 5G Core Database Configuration
+core5g_db:
+  host: "localhost"
+  port: 5432
+  database: "core5g_db"
+  user: "postgres"
+  password: "your_password_here"
+  driver: "org.postgresql.Driver"
+
+# Hive Configuration (data warehouse)
+hive:
+  metastore_uri: "thrift://localhost:9083"
+  warehouse_dir: "/user/hive/warehouse"
+  database: "deployment_analytics"
+
+  # Hive optimization settings
+  optimization:
+    enable_cbo: true              # Cost-based optimizer
+    vectorized_execution: true     # Vectorized query execution
+    file_format: "orc"            # ORC file format for compression
